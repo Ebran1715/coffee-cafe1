@@ -1,0 +1,64 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Coffee",
+      "items": [
+        {
+          "id": 1,
+          "name": "Espresso",
+          "price": 200,
+          "description": "Strong black coffee"
+        },
+        {
+          "id": 2,
+          "name": "Cappuccino",
+          "price": 300,
+          "description": "Espresso with steamed milk"
+        },
+        {
+          "id": 3,
+          "name": "Latte",
+          "price": 100,
+          "description": "Smooth coffee with milk"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Tea",
+      "items": [
+        {
+          "id": 4,
+          "name": "Green Tea",
+          "price": 50,
+          "description": "Refreshing green tea"
+        },
+        {
+          "id": 5,
+          "name": "Black Tea",
+          "price": 30,
+          "description": "Classic English tea"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Pastries",
+      "items": [
+        {
+          "id": 6,
+          "name": "Croissant",
+          "price": 150,
+          "description": "Buttery French pastry"
+        },
+        {
+          "id": 7,
+          "name": "Blueberry Muffin",
+          "price": 200,
+          "description": "Fresh baked muffin"
+        }
+      ]
+    }
+  ]
+}
