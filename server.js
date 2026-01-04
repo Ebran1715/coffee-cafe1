@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql');
+const mysql2 = require('mysql2');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -14,26 +14,26 @@ app.use(express.static('public'));
 // Menu data file
 const MENU_FILE = path.join(__dirname, 'menu.json');
 
-// MySQL Database Connection - UPDATE THESE CREDENTIALS
-const db = mysql.createConnection({
+// MySQL2 Database Connection - UPDATE THESE CREDENTIALS
+const db = mysql2.createConnection({
     host: 'metro.proxy.rlwy.net',          // Usually localhost
     user: 'root',              // XAMPP default
     password: 'uazDtVvdcWuHoXNkvkNdUFiCoqYFCROE',              // XAMPP default is empty
-    port:47619,                // Default MySQL port
+    port:47619,                // Default MySQL2 port
     database: 'railway' // We'll create this
 });
 
-// Connect to MySQL
+// Connect to MySQL2
 db.connect((err) => {
     if (err) {
-        console.error('❌ Error connecting to MySQL:', err.message);
+        console.error('❌ Error connecting to MySQL2:', err.message);
         console.log('Please check:');
-        console.log('1. Is XAMPP MySQL running?');
+        console.log('1. Is XAMPP MySQL2 running?');
         console.log('2. Port 3306 is free?');
         console.log('3. Username/password correct?');
         return;
     }
-    console.log('✅ Connected to MySQL database');
+    console.log('✅ Connected to MySQL2 database');
     initializeDatabase();
 });
 
@@ -145,7 +145,7 @@ app.get('/api/menu', async (req, res) => {
     }
 });
 
-// Submit order (SAVES TO MYSQL DATABASE)
+// Submit order (SAVES TO MYSQL2 DATABASE)
 app.post('/api/order', (req, res) => {
     console.log('📦 Received order:', req.body);
     
@@ -182,13 +182,13 @@ app.post('/api/order', (req, res) => {
                 return;
             }
             
-            console.log('✅ Order saved to MySQL. ID:', result.insertId);
+            console.log('✅ Order saved to MySQL2. ID:', result.insertId);
             
             res.json({ 
                 success: true, 
                 message: 'Order received successfully!', 
                 orderId: orderId,
-                mysqlId: result.insertId
+                mysql2Id: result.insertId
             });
         });
         
@@ -710,7 +710,7 @@ const checkAdmin = (req, res, next) => {
 app.listen(PORT, async () => {
     await initializeMenu();
     console.log(`🚀 Serados Cafe Server running on http://localhost:${PORT}`);
-    console.log(`📊 Using MySQL database: serados_cafe_db`);
+    console.log(`📊 Using MySQL2 database: serados_cafe_db`);
     console.log(`📞 Orders API: http://localhost:${PORT}/api/order`);
     console.log(`📋 Order Tracking: http://localhost:${PORT}/track-order`);
     console.log(`📱 Phone Tracking Endpoint: http://localhost:${PORT}/api/track-orders-by-phone/{phone}`);
