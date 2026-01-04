@@ -16,11 +16,11 @@ const MENU_FILE = path.join(__dirname, 'menu.json');
 
 // MySQL Database Connection - UPDATE THESE CREDENTIALS
 const db = mysql.createConnection({
-    host: 'localhost',          // Usually localhost
+    host: 'metro.proxy.rlwy.net',          // Usually localhost
     user: 'root',              // XAMPP default
-    password: '',              // XAMPP default is empty
-    port: 3306,                // Default MySQL port
-    database: 'serados_cafe_db' // We'll create this
+    password: 'uazDtVvdcWuHoXNkvkNdUFiCoqYFCROE',              // XAMPP default is empty
+    port:47619,                // Default MySQL port
+    database: 'railway' // We'll create this
 });
 
 // Connect to MySQL
@@ -40,7 +40,7 @@ db.connect((err) => {
 // Create database and tables if they don't exist
 function initializeDatabase() {
     // Create database
-    db.query('CREATE DATABASE IF NOT EXISTS serados_cafe_db', (err) => {
+    db.query('CREATE DATABASE IF NOT EXISTS railway', (err) => {
         if (err) {
             console.error('Error creating database:', err);
             return;
@@ -49,7 +49,7 @@ function initializeDatabase() {
         console.log('✅ Database ready');
         
         // Use the database
-        db.changeUser({ database: 'serados_cafe_db' }, (err) => {
+        db.changeUser({ database: 'railway' }, (err) => {
             if (err) {
                 console.error('Error switching database:', err);
                 return;
@@ -253,20 +253,44 @@ app.get('/api/orders/:id', (req, res) => {
 });
 
 // Update order status
-app.put('/api/orders/:id/status', (req, res) => {
+// ✅ Update order status (ALLOW BACKWARD CHANGE)
+app.put('/api/orders/:orderId/status', (req, res) => {
+    const { orderId } = req.params;
     const { status } = req.body;
-    const sql = 'UPDATE orders SET status = ? WHERE order_id = ? OR id = ?';
-    
-    db.query(sql, [status, req.params.id, req.params.id], (err, result) => {
+
+    const allowed = ['received', 'preparing', 'ready', 'completed'];
+    if (!allowed.includes(status)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid status'
+        });
+    }
+
+    const sql = `UPDATE orders SET status=? WHERE order_id=?`;
+
+    db.query(sql, [status, orderId], (err, result) => {
         if (err) {
-            console.error('Error updating order status:', err);
-            res.status(500).json({ error: 'Failed to update order status' });
-            return;
+            console.error('❌ Status update error:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'Database error'
+            });
         }
-        
-        res.json({ success: true, message: 'Order status updated' });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Order status updated'
+        });
     });
 });
+
 
 // Get order statistics
 app.get('/api/orders/stats', (req, res) => {
