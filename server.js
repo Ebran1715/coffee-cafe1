@@ -331,13 +331,49 @@ app.get('/api/cities', (req, res) => {
 
 // Add this endpoint in server.js (around line 190, after the update order status endpoint)
 
-// Delete order by ID
+// Delete order by ID - mysql2 version
 app.delete('/api/orders/:id', (req, res) => {
-    const sql = 'DELETE FROM orders WHERE order_id = ? OR id = ?';
+    const orderId = req.params.id;
     
-    db.query(sql, [req.params.id, req.params.id], (err, result) => {
+    // For mysql2, we need to be more explicit about the parameter
+    const sql = 'DELETE FROM orders WHERE order_id = ?';
+    
+    db.query(sql, [orderId], (err, result) => {
         if (err) {
-            console.error('Error deleting order:', err);
+            console.error('Error deleting order (mysql2):', err);
+            
+            // mysql2 specific error handling
+            if (err.code === 'ER_TRUNCATED_WRONG_VALUE' || err.code === 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD') {
+                // Try alternative approach for mysql2
+                console.log('Trying alternative delete approach for mysql2...');
+                
+                // Approach 1: Use CAST or CONVERT
+                const sql2 = 'DELETE FROM orders WHERE CAST(order_id AS CHAR) = ?';
+                db.query(sql2, [orderId], (err2, result2) => {
+                    if (err2) {
+                        console.error('Alternative approach also failed:', err2);
+                        return res.status(500).json({ 
+                            success: false, 
+                            error: 'Failed to delete order: ' + err2.message 
+                        });
+                    }
+                    
+                    if (result2.affectedRows === 0) {
+                        return res.status(404).json({ 
+                            success: false, 
+                            error: 'Order not found' 
+                        });
+                    }
+                    
+                    res.json({ 
+                        success: true, 
+                        message: 'Order deleted successfully',
+                        affectedRows: result2.affectedRows
+                    });
+                });
+                return;
+            }
+            
             res.status(500).json({ 
                 success: false, 
                 error: 'Failed to delete order: ' + err.message 
@@ -360,39 +396,6 @@ app.delete('/api/orders/:id', (req, res) => {
         });
     });
 });
-
-// Also add this bulk delete endpoint (optional but useful)
-app.post('/api/orders/bulk-delete', (req, res) => {
-    const { orderIds } = req.body;
-    
-    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
-        return res.status(400).json({ 
-            success: false, 
-            error: 'No order IDs provided' 
-        });
-    }
-    
-    const placeholders = orderIds.map(() => '?').join(',');
-    const sql = `DELETE FROM orders WHERE order_id IN (${placeholders})`;
-    
-    db.query(sql, orderIds, (err, result) => {
-        if (err) {
-            console.error('Error bulk deleting orders:', err);
-            res.status(500).json({ 
-                success: false, 
-                error: 'Failed to delete orders: ' + err.message 
-            });
-            return;
-        }
-        
-        res.json({ 
-            success: true, 
-            message: `${result.affectedRows} orders deleted successfully`,
-            affectedRows: result.affectedRows
-        });
-    });
-});
-
 // =============================================
 // ORDER TRACKING SYSTEM - UPDATED ENDPOINTS FOR PHONE NUMBER TRACKING
 // =============================================
